@@ -1,72 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subscription Ended</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .container {
-            background-color: #fff;
-            border: 2px solid #dc3545;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            text-align: center;
-        }
-
-        .box {
-            border: 2px dashed #dc3545;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            background-color: #f8d7da;
-        }
-
-        h1 {
-            color: #dc3545;
-            margin: 0 0 10px 0;
-        }
-
-        p {
-            color: #555;
-            margin: 0;
-            font-size: 14px;
-        }
-
-        .highlight {
-            color: #dc3545;
-            font-weight: bold;
-            background-color: #ffe6e6;
-            padding: 5px;
-            border-radius: 5px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="box">
-            <h1>Warning: Subscription Ended</h1>
-        </div>
-        <p><span class="highlight">Please contact admin</span> to resume the subscription</p>
-    </div>
-</body>
-</html>
-
-
-<!-- 
-
-<!DOCTYPE html>
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -92,7 +24,7 @@
         label {
             font-weight: bold;
         }
-        input[type="text"], input[type="date"], input[type="time"] {
+        input[type="text"], input[type="date"], input[type="time"], input[type="number"], select {
             width: 100%;
             padding: 10px;
             margin-top: 5px;
@@ -113,7 +45,7 @@
         button:hover {
             background-color: #0056b3;
         }
-        #generated-link {
+        .link-container {
             margin-top: 20px;
             padding: 10px;
             background-color: #e9ecef;
@@ -122,26 +54,31 @@
             font-family: monospace;
             position: relative;
         }
-        #copy-button {
+        .copy-button {
             margin-top: 10px;
-            padding: 10px;
+            padding: 5px 10px;
             background-color: #28a745;
             border: none;
             border-radius: 4px;
             color: white;
-            font-size: 16px;
+            font-size: 14px;
             cursor: pointer;
-            display: none;
+            position: absolute;
+            right: 10px;
+            top: 10px;
         }
-        #copy-button:hover {
+        .copy-button:hover {
             background-color: #218838;
+        }
+        .strikethrough {
+            text-decoration: line-through;
         }
     </style>
 </head>
 <body>
 
 <div id="encoder-container">
-    <h2>M S Palya</h2>
+    <h2>Link Encoder</h2>
 
     <label for="order-id">Order ID</label>
     <input type="text" id="order-id" placeholder="Enter Order ID">
@@ -152,38 +89,54 @@
     <label for="time">Time</label>
     <input type="time" id="time">
 
+    <label for="survey-mode">Survey Mode</label>
+    <select id="survey-mode">
+        <option value="4.0">4.0</option>
+        <option value="3.0">3.0</option>
+    </select>
+
     <label for="order-type">Order Type</label>
-    <input type="text" id="order-type" placeholder="Enter Order Type (e.g., 1 for dine-in)">
+    <select id="order-type">
+        <option value="1">1 (Dine-in)</option>
+        <option value="2">2 (Takeaway)</option>
+        <option value="3">3 (Delivery)</option>
+    </select>
 
-    <label for="survey-model">Survey Model</label>
-    <input type="text" id="survey-model" placeholder="Enter Survey Model (e.g., 4.0)">
+    <label for="total-links">Total Links Needed</label>
+    <input type="number" id="total-links" placeholder="Enter total number of links">
 
-    <label for="phone-number">Phone Number</label>
-    <input type="text" id="phone-number" placeholder="Enter Phone Number">
+    <button onclick="generateLinks()">Generate Links</button>
 
-    <button onclick="generateLink()">Generate Link</button>
-
-    <div id="generated-link"></div>
-    <button id="copy-button" onclick="copyLink()">Copy to Clipboard</button>
+    <div id="generated-links"></div>
 </div>
 
 <script>
-    function generateLink() {
+    function generateLinks() {
         const storeID = "91KDIPL946-01";
-        const orderID = document.getElementById('order-id').value;
+        let orderID = parseInt(document.getElementById('order-id').value);
         const date = document.getElementById('date').value;
-        const time = document.getElementById('time').value + ".000";
+        const initialTime = document.getElementById('time').value;
+        const surveyModel = document.getElementById('survey-mode').value;
         const orderType = document.getElementById('order-type').value;
-        const surveyModel = document.getElementById('survey-model').value;
-        const phoneNumber = document.getElementById('phone-number').value;
+        const totalLinks = parseInt(document.getElementById('total-links').value);
 
-        if (orderID && date && time && orderType && surveyModel && phoneNumber) {
+        if (isNaN(orderID) || !date || !initialTime || !totalLinks || !surveyModel || !orderType) {
+            alert("Please fill out all fields correctly.");
+            return;
+        }
+
+        let linksHtml = "";
+        let time = new Date(`${date}T${initialTime}`);
+
+        for (let i = 0; i < totalLinks; i++) {
+            const phoneNumber = generatePhoneNumber();
+
             const data = {
                 "S": storeID,
-                "OI": orderID,
+                "OI": orderID.toString(),
                 "D": date,
-                "TM": time,
-                "TI": orderID,
+                "TM": time.toISOString().slice(11, 19) + ".000",
+                "TI": orderID.toString(),
                 "OT": orderType,
                 "SM": surveyModel,
                 "PH": phoneNumber
@@ -192,26 +145,51 @@
             const encodedData = btoa(JSON.stringify(data));
             const link = `https://customer.kfc-listens.com/jfe/form/SV_8bHC0noyvM3jPWC?Q_EED=${encodedData}`;
 
-            document.getElementById('generated-link').textContent = link;
-            document.getElementById('copy-button').style.display = 'block';
-        } else {
-            alert("Please fill out all fields.");
+            linksHtml += `
+                <div class="link-container">
+                    <span id="link-${i}">${link}</span>
+                    <button class="copy-button" onclick="copyLink('${link}', 'link-${i}')">Copy</button>
+                </div>
+            `;
+
+            // Increment time by 3 minutes
+            time.setMinutes(time.getMinutes() + 3);
+            // Increment order ID by 2
+            orderID += 2;
         }
+
+        document.getElementById('generated-links').innerHTML = linksHtml;
     }
 
-    function copyLink() {
-        const link = document.getElementById('generated-link').textContent;
-        navigator.clipboard.writeText(link).then(() => {
+    function copyLink(link, elementId) {
+        const tempInput = document.createElement('textarea');
+        tempInput.value = link;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        tempInput.setSelectionRange(0, 99999);  // For mobile devices
+
+        try {
+            document.execCommand('copy');
             alert("Link copied to clipboard!");
-        }).catch(err => {
+            document.getElementById(elementId).classList.add('strikethrough');
+        } catch (err) {
+            alert("Failed to copy the link.");
             console.error('Failed to copy: ', err);
-        });
+        }
+
+        document.body.removeChild(tempInput);
+    }
+
+    function generatePhoneNumber() {
+        const prefixes = ["9", "8", "7"];
+        const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+        let number = prefix;
+        for (let i = 0; i < 9; i++) {
+            number += Math.floor(Math.random() * 10);
+        }
+        return number;
     }
 </script>
-<script>
-    setTimeout(function() {
-        location.reload(); // Reloads the webpage
-    }, 60000); // 60000 milliseconds = 1 minute
-</script>
+
 </body>
 </html>
